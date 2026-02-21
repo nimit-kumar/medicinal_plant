@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicinal Plant Recognition System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .upload-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #e8eaff;
+            border-color: #764ba2;
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .upload-area .or-text {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .upload-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s;
+            border: none;
+            font-size: 16px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin: 10px 0;
+        }
+
+        /* Result Section */
+        .result-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .result-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prediction-result {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .plant-name {
+            font-size: 2em;
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .confidence {
+            font-size: 1.2em;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        /* Top 3 Predictions */
+        .top-predictions {
+            margin: 20px 0;
+        }
+
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .prediction-item span {
+            font-weight: 500;
+        }
+
+        .prediction-confidence {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Plant Info */
+        .plant-info {
+            text-align: left;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-list li:before {
+            content: "🌿";
+            color: #667eea;
+        }
+
+        .precaution {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .precaution strong {
+            color: #856404;
+        }
+
+        .view-details-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-top: 15px;
+            transition: transform 0.2s;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .view-details-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Plant List Section */
+        .plant-list-section {
+            margin-top: 40px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .plant-list-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .plant-card {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .plant-card:hover {
+            transform: translateY(-2px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .plant-card h3 {
+            color: #764ba2;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .plant-card p {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .plant-scientific {
+            font-style: italic;
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .plant-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 Medicinal Plant Recognition System</h1>
+            <p>Upload an image of a medicinal plant to identify it and learn about its benefits</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Column - Upload Section -->
+            <div class="upload-section">
+                <h2>
+                    <span>📤</span>
+                    Upload Plant Image
+                </h2>
+                
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <i>📸</i>
+                    <p>Drag & drop or click to upload</p>
+                    <p class="or-text">Supported formats: PNG, JPG, JPEG, GIF, BMP</p>
+                    <button class="upload-btn" onclick="document.getElementById('file-input').click()">
+                        Choose Image
+                    </button>
+                </div>
+
+                <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+
+                <!-- Image Preview -->
+                <div class="preview-section" id="preview-section">
+                    <h3>Image Preview:</h3>
+                    <img class="preview-image" id="preview-image" src="" alt="Preview">
+                </div>
+            </div>
+
+            <!-- Right Column - Results Section -->
+            <div class="result-section">
+                <h2>
+                    <span>🔍</span>
+                    Identification Results
+                </h2>
+
+                <!-- Loading Spinner -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing plant image...</p>
+                </div>
+
+                <!-- Error Message -->
+                <div class="error-message" id="error-message">
+                    <p id="error-text"></p>
+                </div>
+
+                <!-- Results Container -->
+                <div id="results-container" style="display: none;">
+                    <div class="prediction-result">
+                        <div class="plant-name" id="plant-name"></div>
+                        <div class="confidence" id="confidence"></div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top 3 Predictions -->
+                    <div class="top-predictions" id="top-predictions">
+                        <h3>Top 3 Predictions:</h3>
+                        <div id="predictions-list"></div>
+                    </div>
+
+                    <!-- Plant Information -->
+                    <div class="plant-info" id="plant-info">
+                        <!-- Will be populated dynamically -->
+                    </div>
+
+                    <a href="#" class="view-details-btn" id="view-details-btn" target="_blank">
+                        View Complete Details
+                    </a>
+                </div>
+
+                <!-- Initial State -->
+                <div id="initial-state" class="text-center">
+                    <p style="color: #999; padding: 40px;">
+                        Upload an image to see identification results
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plant List Section -->
+        <div class="plant-list-section">
+            <h2>
+                <span>🌱</span>
+                Available Medicinal Plants
+            </h2>
+            <div class="plant-grid" id="plant-grid">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-image').src = e.target.result;
+                    document.getElementById('preview-section').classList.add('active');
+                    
+                    // Upload and analyze image
+                    uploadImage(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Upload image to server
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading, hide results and error
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('error-message').classList.remove('active');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Failed to identify plant');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        // Display results
+        function displayResults(data) {
+            const results = document.getElementById('results-container');
+            results.style.display = 'block';
+
+            // Update plant name and confidence
+            document.getElementById('plant-name').textContent = data.predicted_class;
+            document.getElementById('confidence').textContent = 
+                `Confidence: ${(data.confidence * 100).toFixed(2)}%`;
+            document.getElementById('confidence-fill').style.width = 
+                `${data.confidence * 100}%`;
+
+            // Display top 3 predictions
+            const predictionsList = document.getElementById('predictions-list');
+            predictionsList.innerHTML = '';
+            
+            data.top_3_predictions.forEach(pred => {
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                item.innerHTML = `
+                    <span>${pred.class}</span>
+                    <span class="prediction-confidence">${(pred.confidence * 100).toFixed(2)}%</span>
+                `;
+                predictionsList.appendChild(item);
+            });
+
+            // Display plant information
+            displayPlantInfo(data.plant_info);
+
+            // Update view details button
+            const detailsBtn = document.getElementById('view-details-btn');
+            detailsBtn.href = `/plant/${data.predicted_class}`;
+        }
+
+        // Display plant information
+        function displayPlantInfo(info) {
+            const container = document.getElementById('plant-info');
+            
+            let html = `
+                <div class="info-section">
+                    <h3>Scientific Name</h3>
+                    <p>${info.scientific_name || 'N/A'}</p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Description</h3>
+                    <p>${info.description || 'No description available'}</p>
+                </div>
+            `;
+
+            // Real-life uses
+            if (info.uses_real_life && info.uses_real_life.length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h3>🌍 Modern Uses</h3>
+                        <ul class="info-list">
+                            ${info.uses_real_life.map(use => `<li>${use}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Ayurvedic uses
+            if (info.ayurvedic_uses && info.ayurvedic_uses.length > 0) {
+                html += `
+                    <div class="info-section">
+                        <h3>🕉️ Ayurvedic Uses</h3>
+                        <ul class="info-list">
+                            ${info.ayurvedic_uses.map(use => `<li>${use}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Precautions
+            if (info.precautions) {
+                html += `
+                    <div class="precaution">
+                        <strong>⚠️ Important:</strong> ${info.precautions}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Show error message
+        function showError(message) {
+            document.getElementById('error-text').textContent = message;
+            document.getElementById('error-message').classList.add('active');
+            document.getElementById('initial-state').style.display = 'block';
+        }
+
+        // Load plant list
+        async function loadPlantList() {
+            try {
+                const response = await fetch('/api/plants');
+                const plants = await response.json();
+                
+                const grid = document.getElementById('plant-grid');
+                grid.innerHTML = '';
+
+                plants.forEach(plant => {
+                    const card = document.createElement('div');
+                    card.className = 'plant-card';
+                    card.onclick = () => window.location.href = `/plant/${plant.name}`;
+                    
+                    card.innerHTML = `
+                        <h3>${plant.name.replace(/_/g, ' ')}</h3>
+                        <p class="plant-scientific">${plant.scientific_name}</p>
+                        <p>${plant.description || ''}</p>
+                    `;
+                    
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Failed to load plant list:', error);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlantList();
+
+            // Drag and drop functionality
+            const uploadArea = document.querySelector('.upload-area');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#e8eaff';
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#f8f9ff';
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#f8f9ff';
+                
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    document.getElementById('file-input').files = e.dataTransfer.files;
+                    handleFileSelect({ target: { files: [file] } });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
